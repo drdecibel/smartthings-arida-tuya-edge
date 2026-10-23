@@ -11,6 +11,8 @@ components:
         version: 1
       - id: appledouble53939.ventilationMode
         version: 1
+      - id: appledouble53939.ventilationTimer
+        version: 1
       - id: carbonDioxideMeasurement
         version: 1
       - id: temperatureMeasurement
@@ -35,6 +37,13 @@ components:
         version: 1
     categories:
       - name: Switch
+  - id: panelLight
+    label: Panellys
+    capabilities:
+      - id: switch
+        version: 1
+    categories:
+      - name: Light
 preferences:
   - name: ipAddress
     title: IP-adresse (valgfritt)

@@ -1,0 +1,38 @@
+{
+  "name": "Ventilation Timer",
+  "attributes": {
+    "offTimer": {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "value": { "type": "string", "enum": ["cancel", "1h", "2h", "3h", "4h", "5h", "6h"] }
+        },
+        "additionalProperties": false,
+        "required": ["value"]
+      },
+      "setter": "setOffTimer",
+      "enumCommands": []
+    },
+    "timeRemaining": {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "value": { "type": "integer", "minimum": 0, "maximum": 720 },
+          "unit": { "type": "string", "enum": ["min"], "default": "min" }
+        },
+        "additionalProperties": false,
+        "required": ["value"]
+      },
+      "enumCommands": []
+    }
+  },
+  "commands": {
+    "setOffTimer": {
+      "name": "setOffTimer",
+      "arguments": [
+        { "name": "timer", "optional": false,
+          "schema": { "type": "string", "enum": ["cancel", "1h", "2h", "3h", "4h", "5h", "6h"] } }
+      ]
+    }
+  }
+}

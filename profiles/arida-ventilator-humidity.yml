@@ -11,6 +11,10 @@ components:
         version: 1
       - id: appledouble53939.ventilationMode
         version: 1
+      - id: appledouble53939.humidityThreshold
+        version: 1
+      - id: appledouble53939.ventilationTimer
+        version: 1
       - id: relativeHumidityMeasurement
         version: 1
       - id: filterStatus
@@ -26,13 +30,13 @@ components:
         version: 1
     categories:
       - name: Switch
-  - id: boost
-    label: Boost
+  - id: panelLight
+    label: Panellys
     capabilities:
       - id: switch
         version: 1
     categories:
-      - name: Switch
+      - name: Light
 preferences:
   - name: ipAddress
     title: IP-adresse (valgfritt)

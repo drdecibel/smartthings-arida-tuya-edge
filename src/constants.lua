@@ -33,6 +33,10 @@ C.RELOCATE_INTERVAL = 180
 -- knows a placeholder), so the modes are defined here instead. Definition
 -- and presentation: capabilities/ventilationMode*.json.
 C.VENTILATION_MODE = "appledouble53939.ventilationMode"
+-- Humidity threshold (DP 104) on the tile and in Routines, and the off-timer
+-- (DP 22/23). Same reason: no standard capability fits.
+C.HUMIDITY_THRESHOLD = "appledouble53939.humidityThreshold"
+C.VENTILATION_TIMER = "appledouble53939.ventilationTimer"
 
 C.FIELD = {
   PROTOCOL = "tuya_protocol",

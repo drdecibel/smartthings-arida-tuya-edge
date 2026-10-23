@@ -1,0 +1,26 @@
+{
+  "name": "Humidity Threshold",
+  "attributes": {
+    "humidityThreshold": {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "value": { "type": "integer", "minimum": 50, "maximum": 95 },
+          "unit": { "type": "string", "enum": ["%"], "default": "%" }
+        },
+        "additionalProperties": false,
+        "required": ["value"]
+      },
+      "setter": "setHumidityThreshold",
+      "enumCommands": []
+    }
+  },
+  "commands": {
+    "setHumidityThreshold": {
+      "name": "setHumidityThreshold",
+      "arguments": [
+        { "name": "threshold", "optional": false, "schema": { "type": "integer", "minimum": 50, "maximum": 95 } }
+      ]
+    }
+  }
+}

@@ -18,8 +18,8 @@ The Smart Life app keeps working alongside it.
 
 | | |
 |---|---|
-| Driver version | 0.4.0 |
-| Automated checks | 61 tests on Lua 5.3, CI on Lua 5.3/5.4 |
+| Driver version | 0.5.0 |
+| Automated checks | 63 tests on Lua 5.3, CI on Lua 5.3/5.4 |
 | Protocol verification | Tuya 3.3, 3.4 and 3.5 frames, handshakes and session keys are byte-identical to [tinytuya](https://github.com/jasonacox/tinytuya) (reference vectors in `test/fixtures`) |
 | Verified on hardware | Two Arida Base WiFi units (`sryya13xip27w2nv`, protocol 3.5): key push, device creation, protocol detection and status (switch, mode, speed, humidity, humidity control, filter) |
 | Not yet verified | Commands from SmartThings (speed, mode, on/off, switches), address search after a DHCP change, protocols 3.3/3.4 on real units, the CO₂ variant |
@@ -40,8 +40,11 @@ numbers them differently, the **DP map** setting overrides them without a new dr
 | Temperature | 21 | CO₂ variant only. The Base WiFi has no temperature sensor |
 | Filter status | 106 | `replace` when the filter needs cleaning |
 | Component **Fuktstyring** / **CO₂-styring** | 103 | Sensor-controlled ventilation on/off |
-| Component **Boost** | 107 | Maximum speed for 30 minutes |
-| Setting **Terskel** | 104 | Humidity (50–95 %) or CO₂ (400–2000 ppm) threshold. 0 = leave as is |
+| **Fuktterskel** | 104 | Humidity threshold 50–95 % as a slider, and in Routines (humidity variant) |
+| **Slå av om** / **Tid igjen** | 22 / 23 | Off-timer (Av, 1–6 hours) and minutes left |
+| Component **Panellys** | 15 | The unit's indicator light on/off |
+| Component **Boost** | 107 | Maximum speed for 30 minutes (CO₂ variant only; the Base WiFi has no boost) |
+| Setting **Terskel** | 104 | Same threshold as a device setting; the only way to set it on CO₂ units (400–2000 ppm). 0 = leave as is |
 
 Everything can be used in Routines, for example "boost when bathroom humidity > 70 %".
 
@@ -180,10 +183,10 @@ see [tuya-local #2829](https://github.com/make-all/tuya-local/issues/2829). The 
 | 2 | `mode` | enum supply/exhaust/ventilate | ✔ |
 | 3 | `fan_speed` | 1–3 | ✔ |
 | 9 | `anion` | bool | logged |
-| 15 | `light` | bool | logged |
+| 15 | `light` | bool | ✔ |
 | 20 | `temp_set` | 10–29 °C (free cooling) | logged |
 | 21 | `temp_current` | °C | ✔ |
-| 22 / 23 | `countdown_set` / `countdown_left` | timer | logged |
+| 22 / 23 | `countdown_set` / `countdown_left` | timer | ✔ |
 | 24 | `fault` | bitmap | logged |
 | 101 | `link` | bool | logged |
 | 102 | `free_cooling` | bool | logged |
@@ -197,7 +200,7 @@ The humidity variant reuses 103–105 for humidity instead of CO₂. The driver 
 the values: anything above 100 is ppm. DPs the driver doesn't use are written to the log at
 debug level (`smartthings edge:drivers:logcat`). If your `devices.json` mapping differs, set
 **DP-oppsett** to, for example, `sensor=105,threshold=104,sensor_control=103`. Valid names:
-`switch mode speed temperature sensor_control threshold sensor filter boost`.
+`switch mode speed light timer timer_left temperature sensor_control threshold sensor filter boost`.
 
 ## Troubleshooting
 
@@ -230,7 +233,7 @@ Layout:
 - `src/arida.lua` – DP ↔ SmartThings translation (pure, tested)
 - `src/init.lua` – driver: lifecycle, polling, commands
 - `src/discovery.lua` – "Scan nearby" creates one blank device at a time
-- `capabilities/` – the custom **Driftsmodus** capability (`appledouble53939.ventilationMode`). The standard `mode` capability cannot offer its values in Routines, so the modes are defined here. A fork that changes it must create it in its own namespace with `smartthings capabilities:create` and `capabilities:presentation:create`, and update `C.VENTILATION_MODE`
+- `capabilities/` – custom capabilities: **Driftsmodus** (`appledouble53939.ventilationMode`), **Fuktterskel** (`…humidityThreshold`) and the off-timer (`…ventilationTimer`). The standard `mode` capability cannot offer its values in Routines and there is no standard humidity setpoint or timer, so they are defined here. A fork that changes it must create it in its own namespace with `smartthings capabilities:create` and `capabilities:presentation:create`, and update the ids in `src/constants.lua`
 - `src/locator.lua` – finds a unit's current address by its key (DHCP support)
 - `src/provision.lua`, `tools/push-keys.py` – keys from `devices.json` to the hub, no typing
 

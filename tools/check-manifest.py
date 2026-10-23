@@ -109,6 +109,22 @@ for name, profile in profiles.items():
 
 # Custom capabilities: definition, presentation and the driver's labels agree.
 import json
+
+
+def list_items(pres):
+    """Every list entry in the presentation, with the attribute or command it uses."""
+    for item in pres.get("detailView", []):
+        if item.get("displayType") == "list":
+            lst = item["list"]
+            yield lst["command"]["name"], lst["command"]["alternatives"]
+            yield lst["state"]["value"].split(".")[0], lst["state"]["alternatives"]
+    for section in ("conditions", "actions"):
+        for item in pres.get("automation", {}).get(section, []):
+            if item.get("displayType") == "list":
+                lst = item["list"]
+                yield lst.get("command") or lst["value"].split(".")[0], lst["alternatives"]
+
+
 for definition in sorted((ROOT / "capabilities").glob("*.json")):
     if definition.name.endswith(".presentation.json"):
         continue
@@ -118,15 +134,17 @@ for definition in sorted((ROOT / "capabilities").glob("*.json")):
         fail(f"{definition.name} has no presentation file")
         continue
     pres = json.loads(pres_path.read_text(encoding="utf-8"))
-    for attr in cap["attributes"].values():
-        enum = attr["schema"]["properties"]["value"].get("enum")
-        if not enum:
-            continue
-        for section in (pres["automation"]["actions"], pres["automation"]["conditions"]):
-            for item in section:
-                keys = [a["key"] for a in item["list"]["alternatives"]]
-                if sorted(keys) != sorted(enum):
-                    fail(f"{pres_path.name}: alternatives {keys} do not match enum {enum}")
+    enums = {}
+    for name, attr in cap["attributes"].items():
+        enums[name] = attr["schema"]["properties"]["value"].get("enum")
+    for name, command in cap.get("commands", {}).items():
+        enums[name] = command["arguments"][0]["schema"].get("enum")
+    for target, alternatives in list_items(pres):
+        keys = sorted(a["key"] for a in alternatives)
+        if target not in enums:
+            fail(f"{pres_path.name}: list refers to unknown attribute or command {target!r}")
+        elif enums[target] is None or keys != sorted(enums[target]):
+            fail(f"{pres_path.name}: {target} alternatives {keys} do not match its enum {enums[target]}")
     if pres.get("id") not in constants:
         fail(f"{pres_path.name}: capability id {pres.get('id')!r} is not used in src/constants.lua")
 arida = (ROOT / "src" / "arida.lua").read_text(encoding="utf-8")

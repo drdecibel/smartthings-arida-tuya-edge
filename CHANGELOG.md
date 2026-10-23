@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.5.0 – 2026-10-23
+
+- **Fuktterskel:** the humidity threshold (DP 104) is shown as a 50–95 % slider and can be
+  used in Routines, through the custom `appledouble53939.humidityThreshold` capability.
+- **Off-timer:** "Slå av om" (Av, 1–6 hours, DP 22) and "Tid igjen" (minutes left, DP 23),
+  through the custom `appledouble53939.ventilationTimer` capability.
+- **Panellys:** the unit's indicator light (DP 15) as its own switch.
+- The Base WiFi no longer shows a Boost switch: it has no boost and never reports DP 107.
+  The CO₂ profile keeps it.
+- The manifest check now validates every list in every custom capability presentation
+  against the capability's enums.
+
 ## 0.4.0 – 2026-10-23
 
 - The operating mode is now the custom **Driftsmodus** capability

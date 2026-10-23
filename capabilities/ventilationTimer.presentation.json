@@ -1,0 +1,197 @@
+{
+  "dashboard": {
+    "states": [],
+    "actions": []
+  },
+  "detailView": [
+    {
+      "label": "Slå av om",
+      "displayType": "list",
+      "list": {
+        "command": {
+          "name": "setOffTimer",
+          "alternatives": [
+            {
+              "key": "cancel",
+              "value": "Av",
+              "type": "active"
+            },
+            {
+              "key": "1h",
+              "value": "1 time",
+              "type": "active"
+            },
+            {
+              "key": "2h",
+              "value": "2 timer",
+              "type": "active"
+            },
+            {
+              "key": "3h",
+              "value": "3 timer",
+              "type": "active"
+            },
+            {
+              "key": "4h",
+              "value": "4 timer",
+              "type": "active"
+            },
+            {
+              "key": "5h",
+              "value": "5 timer",
+              "type": "active"
+            },
+            {
+              "key": "6h",
+              "value": "6 timer",
+              "type": "active"
+            }
+          ]
+        },
+        "state": {
+          "value": "offTimer.value",
+          "alternatives": [
+            {
+              "key": "cancel",
+              "value": "Av",
+              "type": "active"
+            },
+            {
+              "key": "1h",
+              "value": "1 time",
+              "type": "active"
+            },
+            {
+              "key": "2h",
+              "value": "2 timer",
+              "type": "active"
+            },
+            {
+              "key": "3h",
+              "value": "3 timer",
+              "type": "active"
+            },
+            {
+              "key": "4h",
+              "value": "4 timer",
+              "type": "active"
+            },
+            {
+              "key": "5h",
+              "value": "5 timer",
+              "type": "active"
+            },
+            {
+              "key": "6h",
+              "value": "6 timer",
+              "type": "active"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "Tid igjen",
+      "displayType": "state",
+      "state": {
+        "label": "{{timeRemaining.value}} {{timeRemaining.unit}}"
+      }
+    }
+  ],
+  "automation": {
+    "conditions": [
+      {
+        "label": "Slå av om",
+        "displayType": "list",
+        "list": {
+          "alternatives": [
+            {
+              "key": "cancel",
+              "value": "Av",
+              "type": "active"
+            },
+            {
+              "key": "1h",
+              "value": "1 time",
+              "type": "active"
+            },
+            {
+              "key": "2h",
+              "value": "2 timer",
+              "type": "active"
+            },
+            {
+              "key": "3h",
+              "value": "3 timer",
+              "type": "active"
+            },
+            {
+              "key": "4h",
+              "value": "4 timer",
+              "type": "active"
+            },
+            {
+              "key": "5h",
+              "value": "5 timer",
+              "type": "active"
+            },
+            {
+              "key": "6h",
+              "value": "6 timer",
+              "type": "active"
+            }
+          ],
+          "value": "offTimer.value"
+        }
+      }
+    ],
+    "actions": [
+      {
+        "label": "Slå av om",
+        "displayType": "list",
+        "list": {
+          "alternatives": [
+            {
+              "key": "cancel",
+              "value": "Av",
+              "type": "active"
+            },
+            {
+              "key": "1h",
+              "value": "1 time",
+              "type": "active"
+            },
+            {
+              "key": "2h",
+              "value": "2 timer",
+              "type": "active"
+            },
+            {
+              "key": "3h",
+              "value": "3 timer",
+              "type": "active"
+            },
+            {
+              "key": "4h",
+              "value": "4 timer",
+              "type": "active"
+            },
+            {
+              "key": "5h",
+              "value": "5 timer",
+              "type": "active"
+            },
+            {
+              "key": "6h",
+              "value": "6 timer",
+              "type": "active"
+            }
+          ],
+          "command": "setOffTimer"
+        }
+      }
+    ]
+  },
+  "id": "appledouble53939.ventilationTimer",
+  "version": 1
+}

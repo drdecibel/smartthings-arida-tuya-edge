@@ -1,0 +1,54 @@
+{
+  "dashboard": {
+    "states": [],
+    "actions": []
+  },
+  "detailView": [
+    {
+      "label": "Fuktterskel",
+      "displayType": "slider",
+      "slider": {
+        "range": [
+          50,
+          95
+        ],
+        "step": 1,
+        "unit": "humidityThreshold.unit",
+        "command": "setHumidityThreshold",
+        "value": "humidityThreshold.value"
+      }
+    }
+  ],
+  "automation": {
+    "conditions": [
+      {
+        "label": "Fuktterskel",
+        "displayType": "numberField",
+        "numberField": {
+          "value": "humidityThreshold.value",
+          "unit": "humidityThreshold.unit",
+          "range": [
+            50,
+            95
+          ]
+        }
+      }
+    ],
+    "actions": [
+      {
+        "label": "Fuktterskel",
+        "displayType": "numberField",
+        "numberField": {
+          "command": "setHumidityThreshold",
+          "unit": "humidityThreshold.unit",
+          "range": [
+            50,
+            95
+          ]
+        }
+      }
+    ]
+  },
+  "id": "appledouble53939.humidityThreshold",
+  "version": 1
+}

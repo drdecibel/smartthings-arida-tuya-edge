@@ -170,6 +170,8 @@ local function relocate(device, reason)
 end
 
 local ventilation_mode = capabilities[constants.VENTILATION_MODE]
+local humidity_threshold = capabilities[constants.HUMIDITY_THRESHOLD]
+local ventilation_timer = capabilities[constants.VENTILATION_TIMER]
 
 --- Switches between the humidity and CO2 profiles when the device's sensor
 --- turns out to differ from the profile in use.
@@ -211,6 +213,18 @@ local function emit_state(device, dps)
   end
   if s.threshold then
     rt(device).threshold = s.threshold
+    if kind == "humidity" and device:supports_capability_by_id(constants.HUMIDITY_THRESHOLD) then
+      device:emit_event(humidity_threshold.humidityThreshold({value = s.threshold, unit = "%"}))
+    end
+  end
+  if s.timer and device:supports_capability_by_id(constants.VENTILATION_TIMER) then
+    if arida.TIMER_VALUES[s.timer] then
+      device:emit_event(ventilation_timer.offTimer(s.timer))
+    end
+    device:emit_event(ventilation_timer.timeRemaining({value = s.timer_left or 0, unit = "min"}))
+  end
+  if s.light and device.profile.components.panelLight then
+    device:emit_component_event(device.profile.components.panelLight, capabilities.switch.switch(s.light))
   end
 
   local extra = arida.unmapped(dps, map)
@@ -364,6 +378,8 @@ local function component_switch(on)
     local map = dp_map(device)
     if command.component == "sensorControl" then
       send(device, arida.sensor_control_dps(map, on))
+    elseif command.component == "panelLight" then
+      send(device, arida.light_dps(map, on))
     elseif command.component == "boost" then
       send(device, arida.boost_dps(map, on))
     else
@@ -380,6 +396,19 @@ local function set_ventilation_mode(_driver, device, command)
   local dps = arida.mode_dps(dp_map(device), command.args.mode)
   if not dps then
     log.warn(device.label .. ": unknown mode " .. tostring(command.args.mode))
+    return
+  end
+  send(device, dps)
+end
+
+local function set_humidity_threshold(_driver, device, command)
+  send(device, arida.threshold_dps(dp_map(device), "humidity", command.args.threshold))
+end
+
+local function set_off_timer(_driver, device, command)
+  local dps = arida.timer_dps(dp_map(device), command.args.timer)
+  if not dps then
+    log.warn(device.label .. ": unsupported timer value " .. tostring(command.args.timer))
     return
   end
   send(device, dps)
@@ -408,6 +437,12 @@ driver = Driver("arida-tuya-lan", {
     [ventilation_mode.ID] = {
       [ventilation_mode.commands.setVentilationMode.NAME] = set_ventilation_mode,
     },
+    [humidity_threshold.ID] = {
+      [humidity_threshold.commands.setHumidityThreshold.NAME] = set_humidity_threshold,
+    },
+    [ventilation_timer.ID] = {
+      [ventilation_timer.commands.setOffTimer.NAME] = set_off_timer,
+    },
     [capabilities.refresh.ID] = {
       [capabilities.refresh.commands.refresh.NAME] = refresh,
     },
@@ -416,6 +451,8 @@ driver = Driver("arida-tuya-lan", {
     capabilities.switch,
     capabilities.fanSpeed,
     ventilation_mode,
+    humidity_threshold,
+    ventilation_timer,
     capabilities.relativeHumidityMeasurement,
     capabilities.carbonDioxideMeasurement,
     capabilities.temperatureMeasurement,

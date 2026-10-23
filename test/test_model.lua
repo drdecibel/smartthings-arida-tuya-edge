@@ -104,7 +104,30 @@ end)
 
 H.test("unmapped DPs are listed for diagnostics", function()
   local extra = arida.unmapped(VENTI_CO2, MAP)
-  H.eq(table.concat(extra, ","), "101=false,102=true,15=false,20=12,22=cancel,23=0,9=false")
+  H.eq(table.concat(extra, ","), "101=false,102=true,20=12,9=false")
+end)
+
+-- Live status from an Arida Base WiFi (protocol 3.5).
+local BASE = {["1"] = true, ["2"] = "ventilate", ["3"] = 1, ["15"] = false, ["22"] = "2h", ["23"] = 95,
+  ["101"] = true, ["102"] = false, ["103"] = true, ["104"] = 85, ["105"] = 50, ["106"] = false}
+
+H.test("Base WiFi: panel light, timer and time left", function()
+  local s = arida.to_state(BASE, MAP, "humidity")
+  H.eq(s.light, "off")
+  H.eq(s.timer, "2h")
+  H.eq(s.timer_left, 95)
+  H.eq(s.threshold, 85)
+  H.eq(s.humidity, 50)
+  H.eq(s.temperature, nil, "no temperature sensor")
+  H.eq(s.boost, nil, "no boost")
+end)
+
+H.test("panel light and timer commands", function()
+  H.same(arida.light_dps(MAP, true), {["15"] = true})
+  H.same(arida.timer_dps(MAP, "3h"), {["22"] = "3h"})
+  H.same(arida.timer_dps(MAP, "cancel"), {["22"] = "cancel"})
+  H.eq(arida.timer_dps(MAP, "12h"), nil, "the Base accepts at most 6h")
+  H.eq(arida.timer_dps(MAP, "soon"), nil)
 end)
 
 H.done("test_model")

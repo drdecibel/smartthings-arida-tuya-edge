@@ -11,6 +11,9 @@
 --   1    switch          bool
 --   2    mode            enum  supply | exhaust | ventilate
 --   3    fan_speed       value 1-3
+--   15   light           bool  panel indicator light
+--   22   countdown_set   enum  cancel | 1h .. 6h (switches the unit off)
+--   23   countdown_left  value minutes left on the timer (read only)
 --   21   temp_current    value °C (read only)
 --   103  sensor control  bool  humidity (or CO2) control on/off
 --   104  threshold       value %RH 50-95, or ppm 400-2000 on CO2 units
@@ -27,6 +30,9 @@ M.DEFAULT_DP = {
   switch = 1,
   mode = 2,
   speed = 3,
+  light = 15,
+  timer = 22,
+  timer_left = 23,
   temperature = 21,
   sensor_control = 103,
   threshold = 104,
@@ -44,6 +50,10 @@ M.MODES = {
   {value = "supply", label = "Tilluft"},
   {value = "exhaust", label = "Avtrekk"},
 }
+
+-- Off-timer values the Base WiFi accepts (the Venti goes up to 12h).
+M.TIMER_VALUES = {cancel = true, ["1h"] = true, ["2h"] = true, ["3h"] = true,
+  ["4h"] = true, ["5h"] = true, ["6h"] = true}
 
 M.THRESHOLD_RANGE = {
   humidity = {min = 50, max = 95, step = 1},
@@ -126,6 +136,15 @@ function M.to_state(dps, map, kind)
     s.fan_speed = speed
   end
 
+  local light = get(dps, map.light)
+  if type(light) == "boolean" then s.light = light and "on" or "off" end
+
+  local timer = get(dps, map.timer)
+  if type(timer) == "string" then s.timer = timer end
+
+  local timer_left = get(dps, map.timer_left)
+  if math.type(timer_left) then s.timer_left = timer_left end
+
   local temperature = get(dps, map.temperature)
   if math.type(temperature) then s.temperature = temperature end
 
@@ -190,6 +209,16 @@ end
 
 function M.sensor_control_dps(map, on)
   return {[tostring(map.sensor_control)] = on}
+end
+
+function M.light_dps(map, on)
+  return {[tostring(map.light)] = on}
+end
+
+--- Returns nil for a value the unit does not accept.
+function M.timer_dps(map, value)
+  if not M.TIMER_VALUES[value] then return nil end
+  return {[tostring(map.timer)] = value}
 end
 
 function M.boost_dps(map, on)
