@@ -68,24 +68,12 @@ function M.parse_dp_map(text)
   return map, warnings
 end
 
-function M.label_for_mode(value)
-  for _, m in ipairs(M.MODES) do
-    if m.value == value then return m.label end
-  end
-  return value
-end
-
+--- Tuya mode value for a mode value or a label, or nil if unknown.
 function M.mode_for_label(label)
   for _, m in ipairs(M.MODES) do
     if m.label == label or m.value == label then return m.value end
   end
   return nil
-end
-
-function M.supported_mode_labels()
-  local out = {}
-  for i, m in ipairs(M.MODES) do out[i] = m.label end
-  return out
 end
 
 --- Humidity units report 0-100 %RH; CO2 units report and accept ppm in the
@@ -125,8 +113,10 @@ function M.to_state(dps, map, kind)
   local power = get(dps, map.switch)
   if type(power) == "boolean" then s.switch = power and "on" or "off" end
 
+  -- The ventilation mode capability uses Tuya's own values; its
+  -- presentation shows them as Varmegjenvinning / Tilluft / Avtrekk.
   local mode = get(dps, map.mode)
-  if type(mode) == "string" then s.mode = M.label_for_mode(mode) end
+  if type(mode) == "string" then s.mode = mode end
 
   local speed = M.decode_speed(get(dps, map.speed))
   if speed then s.speed = speed end

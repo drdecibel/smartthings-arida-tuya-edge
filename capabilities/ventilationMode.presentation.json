@@ -1,0 +1,71 @@
+{
+  "dashboard": {
+    "states": [
+      {
+        "label": "{{ventilationMode.value}}",
+        "alternatives": [
+          { "key": "ventilate", "value": "Varmegjenvinning", "type": "active" },
+          { "key": "supply", "value": "Tilluft", "type": "active" },
+          { "key": "exhaust", "value": "Avtrekk", "type": "active" }
+        ]
+      }
+    ],
+    "actions": []
+  },
+  "detailView": [
+    {
+      "label": "Driftsmodus",
+      "displayType": "list",
+      "list": {
+        "command": {
+          "name": "setVentilationMode",
+          "alternatives": [
+            { "key": "ventilate", "value": "Varmegjenvinning", "type": "active" },
+            { "key": "supply", "value": "Tilluft", "type": "active" },
+            { "key": "exhaust", "value": "Avtrekk", "type": "active" }
+          ]
+        },
+        "state": {
+          "value": "ventilationMode.value",
+          "alternatives": [
+            { "key": "ventilate", "value": "Varmegjenvinning", "type": "active" },
+            { "key": "supply", "value": "Tilluft", "type": "active" },
+            { "key": "exhaust", "value": "Avtrekk", "type": "active" }
+          ]
+        }
+      }
+    }
+  ],
+  "automation": {
+    "conditions": [
+      {
+        "label": "Driftsmodus",
+        "displayType": "list",
+        "list": {
+          "alternatives": [
+            { "key": "ventilate", "value": "Varmegjenvinning", "type": "active" },
+            { "key": "supply", "value": "Tilluft", "type": "active" },
+            { "key": "exhaust", "value": "Avtrekk", "type": "active" }
+          ],
+          "value": "ventilationMode.value"
+        }
+      }
+    ],
+    "actions": [
+      {
+        "label": "Driftsmodus",
+        "displayType": "list",
+        "list": {
+          "alternatives": [
+            { "key": "ventilate", "value": "Varmegjenvinning", "type": "active" },
+            { "key": "supply", "value": "Tilluft", "type": "active" },
+            { "key": "exhaust", "value": "Avtrekk", "type": "active" }
+          ],
+          "command": "setVentilationMode"
+        }
+      }
+    ]
+  },
+  "id": "appledouble53939.ventilationMode",
+  "version": 1
+}

@@ -169,10 +169,7 @@ local function relocate(device, reason)
   return dps, version
 end
 
-local function emit_supported_modes(device)
-  local labels = arida.supported_mode_labels()
-  device:emit_event(capabilities.mode.supportedModes(labels, {visibility = {displayed = false}}))
-end
+local ventilation_mode = capabilities[constants.VENTILATION_MODE]
 
 --- Switches between the humidity and CO2 profiles when the device's sensor
 --- turns out to differ from the profile in use.
@@ -191,7 +188,11 @@ local function emit_state(device, dps)
 
   if s.switch then device:emit_event(capabilities.switch.switch(s.switch)) end
   if s.fan_speed then device:emit_event(capabilities.fanSpeed.fanSpeed(s.fan_speed)) end
-  if s.mode then device:emit_event(capabilities.mode.mode(s.mode)) end
+  if s.mode and arida.mode_for_label(s.mode) then
+    device:emit_event(ventilation_mode.ventilationMode(s.mode))
+  elseif s.mode then
+    log.warn(device.label .. ": unknown mode value " .. tostring(s.mode))
+  end
   if s.temperature then
     device:emit_event(capabilities.temperatureMeasurement.temperature({value = s.temperature, unit = "C"}))
   end
@@ -304,13 +305,11 @@ end
 -- Lifecycle ------------------------------------------------------------------
 
 local function device_init(_driver, device)
-  emit_supported_modes(device)
   start_polling(device)
   device.thread:call_with_delay(1, function() exchange(device) end)
 end
 
 local function device_added(_driver, device)
-  emit_supported_modes(device)
   if not discovery.is_configured(device, driver) then
     log.info(device.label .. ": added; run tools/push-keys.py on a PC and tap Scan nearby, "
       .. "or enter device ID and local key in its settings")
@@ -377,7 +376,7 @@ local function set_fan_speed(_driver, device, command)
   send(device, arida.fan_speed_dps(dp_map(device), command.args.speed))
 end
 
-local function set_mode(_driver, device, command)
+local function set_ventilation_mode(_driver, device, command)
   local dps = arida.mode_dps(dp_map(device), command.args.mode)
   if not dps then
     log.warn(device.label .. ": unknown mode " .. tostring(command.args.mode))
@@ -406,8 +405,8 @@ driver = Driver("arida-tuya-lan", {
     [capabilities.fanSpeed.ID] = {
       [capabilities.fanSpeed.commands.setFanSpeed.NAME] = set_fan_speed,
     },
-    [capabilities.mode.ID] = {
-      [capabilities.mode.commands.setMode.NAME] = set_mode,
+    [ventilation_mode.ID] = {
+      [ventilation_mode.commands.setVentilationMode.NAME] = set_ventilation_mode,
     },
     [capabilities.refresh.ID] = {
       [capabilities.refresh.commands.refresh.NAME] = refresh,
@@ -416,7 +415,7 @@ driver = Driver("arida-tuya-lan", {
   supported_capabilities = {
     capabilities.switch,
     capabilities.fanSpeed,
-    capabilities.mode,
+    ventilation_mode,
     capabilities.relativeHumidityMeasurement,
     capabilities.carbonDioxideMeasurement,
     capabilities.temperatureMeasurement,

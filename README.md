@@ -18,7 +18,7 @@ The Smart Life app keeps working alongside it.
 
 | | |
 |---|---|
-| Driver version | 0.3.0 |
+| Driver version | 0.4.0 |
 | Automated checks | 61 tests on Lua 5.3, CI on Lua 5.3/5.4 |
 | Protocol verification | Tuya 3.3, 3.4 and 3.5 frames, handshakes and session keys are byte-identical to [tinytuya](https://github.com/jasonacox/tinytuya) (reference vectors in `test/fixtures`) |
 | Verified on hardware | Two Arida Base WiFi units (`sryya13xip27w2nv`, protocol 3.5): key push, device creation, protocol detection and status (switch, mode, speed, humidity, humidity control, filter) |
@@ -34,7 +34,7 @@ numbers them differently, the **DP map** setting overrides them without a new dr
 |---|---|---|
 | Switch | 1 | On/off |
 | Fan speed | 3 | 1–3. Fan speed 0 turns the unit off |
-| Mode | 2 | Varmegjenvinning (`ventilate`), Tilluft (`supply`), Avtrekk (`exhaust`) |
+| Driftsmodus | 2 | Varmegjenvinning (`ventilate`), Tilluft (`supply`), Avtrekk (`exhaust`). Selectable in Routines |
 | Relative humidity | 105 | Humidity variant (Base WiFi) |
 | Carbon dioxide | 105 | CO₂ variant (Venti CO₂). The profile switches automatically |
 | Temperature | 21 | CO₂ variant only. The Base WiFi has no temperature sensor |
@@ -135,8 +135,8 @@ from the surrounding rooms, so use it only in deep cold and stay on heat recover
 
 | Routine | If | Then |
 |---|---|---|
-| Frost protection | Weather → Temperature **below −20 °C** | Every ventilator → Mode → **Avtrekk** |
-| Back to heat recovery | Weather → Temperature **above −17 °C** | Every ventilator → Mode → **Varmegjenvinning** |
+| Frost protection | Weather → Temperature **below −20 °C** | Every ventilator → Driftsmodus → **Avtrekk** |
+| Back to heat recovery | Weather → Temperature **above −17 °C** | Every ventilator → Driftsmodus → **Varmegjenvinning** |
 
 The 3 °C gap stops the units from switching back and forth around the limit. Arida states no
 specific limit: −20 °C is a safety margin chosen by the project (the units are rated for
@@ -230,6 +230,7 @@ Layout:
 - `src/arida.lua` – DP ↔ SmartThings translation (pure, tested)
 - `src/init.lua` – driver: lifecycle, polling, commands
 - `src/discovery.lua` – "Scan nearby" creates one blank device at a time
+- `capabilities/` – the custom **Driftsmodus** capability (`appledouble53939.ventilationMode`). The standard `mode` capability cannot offer its values in Routines, so the modes are defined here. A fork that changes it must create it in its own namespace with `smartthings capabilities:create` and `capabilities:presentation:create`, and update `C.VENTILATION_MODE`
 - `src/locator.lua` – finds a unit's current address by its key (DHCP support)
 - `src/provision.lua`, `tools/push-keys.py` – keys from `devices.json` to the hub, no typing
 

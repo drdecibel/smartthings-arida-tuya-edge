@@ -28,6 +28,12 @@ C.OFFLINE_AFTER = 3
 -- Minimum seconds between network searches for one unit.
 C.RELOCATE_INTERVAL = 180
 
+-- Custom capability for the operating mode. The standard `mode` capability
+-- cannot offer its values in Routines (its automation presentation only
+-- knows a placeholder), so the modes are defined here instead. Definition
+-- and presentation: capabilities/ventilationMode*.json.
+C.VENTILATION_MODE = "appledouble53939.ventilationMode"
+
 C.FIELD = {
   PROTOCOL = "tuya_protocol",
   SENSOR_KIND = "sensor_kind",

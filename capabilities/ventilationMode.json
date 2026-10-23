@@ -1,0 +1,35 @@
+{
+  "name": "Ventilation Mode",
+  "attributes": {
+    "ventilationMode": {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "enum": ["ventilate", "supply", "exhaust"]
+          }
+        },
+        "additionalProperties": false,
+        "required": ["value"]
+      },
+      "setter": "setVentilationMode",
+      "enumCommands": []
+    }
+  },
+  "commands": {
+    "setVentilationMode": {
+      "name": "setVentilationMode",
+      "arguments": [
+        {
+          "name": "mode",
+          "optional": false,
+          "schema": {
+            "type": "string",
+            "enum": ["ventilate", "supply", "exhaust"]
+          }
+        }
+      ]
+    }
+  }
+}

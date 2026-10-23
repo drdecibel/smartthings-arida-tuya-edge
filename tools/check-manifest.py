@@ -95,7 +95,9 @@ for name, profile in profiles.items():
             fail(f"{name} component {component['id']} is never referenced by src/init.lua")
         for capability in component.get("capabilities", []):
             capability_id = capability.get("id")
-            if capability_id and f"capabilities.{capability_id}" not in source:
+            referenced_here = f"capabilities.{capability_id}" in source or (
+                "." in capability_id and f'"{capability_id}"' in constants)
+            if capability_id and not referenced_here:
                 fail(
                     f"{name} component {component['id']} declares capability "
                     f"{capability_id}, which src/init.lua never references"
@@ -104,6 +106,34 @@ for name, profile in profiles.items():
         if pref["name"] not in source and pref["name"] not in \
                 (ROOT / "src" / "discovery.lua").read_text(encoding="utf-8"):
             fail(f"{name}: preference {pref['name']} is never read by the driver")
+
+# Custom capabilities: definition, presentation and the driver's labels agree.
+import json
+for definition in sorted((ROOT / "capabilities").glob("*.json")):
+    if definition.name.endswith(".presentation.json"):
+        continue
+    cap = json.loads(definition.read_text(encoding="utf-8"))
+    pres_path = definition.with_name(definition.stem + ".presentation.json")
+    if not pres_path.exists():
+        fail(f"{definition.name} has no presentation file")
+        continue
+    pres = json.loads(pres_path.read_text(encoding="utf-8"))
+    for attr in cap["attributes"].values():
+        enum = attr["schema"]["properties"]["value"].get("enum")
+        if not enum:
+            continue
+        for section in (pres["automation"]["actions"], pres["automation"]["conditions"]):
+            for item in section:
+                keys = [a["key"] for a in item["list"]["alternatives"]]
+                if sorted(keys) != sorted(enum):
+                    fail(f"{pres_path.name}: alternatives {keys} do not match enum {enum}")
+    if pres.get("id") not in constants:
+        fail(f"{pres_path.name}: capability id {pres.get('id')!r} is not used in src/constants.lua")
+arida = (ROOT / "src" / "arida.lua").read_text(encoding="utf-8")
+for key, label in re.findall(r'\{value = "(\w+)", label = "([^"]+)"\}', arida):
+    presentation = (ROOT / "capabilities" / "ventilationMode.presentation.json").read_text(encoding="utf-8")
+    if f'"key": "{key}", "value": "{label}"' not in presentation:
+        fail(f"mode {key} is labelled {label!r} in src/arida.lua but not in the presentation")
 
 if problems:
     for problem in problems:

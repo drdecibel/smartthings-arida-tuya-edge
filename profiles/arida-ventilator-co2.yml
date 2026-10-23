@@ -9,7 +9,7 @@ components:
         version: 1
       - id: fanSpeed
         version: 1
-      - id: mode
+      - id: appledouble53939.ventilationMode
         version: 1
       - id: carbonDioxideMeasurement
         version: 1

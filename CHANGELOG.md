@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0 – 2026-10-23
+
+- The operating mode is now the custom **Driftsmodus** capability
+  (`appledouble53939.ventilationMode`) instead of the standard `mode` capability, whose
+  automation presentation only lists a placeholder, so Routines could not choose a mode.
+  Varmegjenvinning, Tilluft and Avtrekk can now be used as Routine conditions and actions.
+- The manifest check verifies that the capability definition, its presentation and the
+  driver's mode labels agree.
+
 ## 0.3.0 – 2026-10-23
 
 - Published the channel invitation; browser enrolment is now the primary installation method.
