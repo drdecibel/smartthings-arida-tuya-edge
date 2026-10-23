@@ -52,7 +52,7 @@ local function client_for(device)
     ip = p.ipAddress,
     device_id = p.deviceId,
     local_key = p.localKey,
-    version = p.protocolVersion or "auto",
+    version = constants.PROTOCOL_OPTION[p.protocolVersion] or "auto",
     timeout = constants.TIMEOUT_SECONDS,
     learned = device:get_field(constants.FIELD.PROTOCOL),
     log = log,

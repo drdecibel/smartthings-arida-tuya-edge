@@ -15,6 +15,9 @@ C.PLACEHOLDER_ID = "enter-device-id"
 C.PLACEHOLDER_KEY = "enter-local-key!"
 C.DEFAULT_DP_MAP = "standard"
 
+-- protocolVersion preference keys (the API allows only \w+) -> version.
+C.PROTOCOL_OPTION = {auto = "auto", v33 = "3.3", v34 = "3.4", v35 = "3.5"}
+
 C.DEFAULT_POLL_SECONDS = 30
 C.MIN_POLL_SECONDS = 10
 C.TIMEOUT_SECONDS = 5

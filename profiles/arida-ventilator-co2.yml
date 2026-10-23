@@ -74,9 +74,9 @@ preferences:
     definition:
       options:
         auto: Automatisk
-        "3.3": "3.3"
-        "3.4": "3.4"
-        "3.5": "3.5"
+        v33: "3.3"
+        v34: "3.4"
+        v35: "3.5"
       default: auto
   - name: pollInterval
     title: Oppdateringsintervall (sekunder)
