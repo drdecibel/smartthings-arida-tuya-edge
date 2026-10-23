@@ -1,0 +1,74 @@
+name: Validate driver
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Lua and YAML validator
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes python3-yaml
+          # SmartThings Edge runs Lua 5.3, so prefer it when it is available.
+          sudo apt-get install --yes lua5.3 || sudo apt-get install --yes lua5.4
+          if command -v lua5.3 > /dev/null; then
+            echo "LUA=lua5.3" >> "$GITHUB_ENV"
+            echo "LUAC=luac5.3" >> "$GITHUB_ENV"
+          else
+            echo "LUA=lua5.4" >> "$GITHUB_ENV"
+            echo "LUAC=luac5.4" >> "$GITHUB_ENV"
+          fi
+
+      - name: Check Lua syntax
+        run: make syntax LUAC="$LUAC"
+
+      - name: Run tests
+        run: make test LUA="$LUA"
+
+      - name: Check YAML files
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import yaml
+
+          paths = [Path("config.yml")]
+          paths += sorted(Path("profiles").glob("*.yml"))
+          paths += sorted(Path(".github").rglob("*.yml"))
+          for path in paths:
+              with path.open(encoding="utf-8") as stream:
+                  yaml.safe_load(stream)
+              print(f"{path}: OK")
+          PY
+
+      - name: Check driver manifest
+        run: make manifest
+
+      - name: Privacy scan
+        run: make privacy
+
+  vectors:
+    # The committed vectors must be exactly what current tinytuya produces.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install tinytuya==1.20.0
+      - run: python tools/gen-test-vectors.py
+      - name: Vectors unchanged
+        run: |
+          if ! git diff --quiet -- test/fixtures/vectors.lua; then
+            git diff --stat -- test/fixtures/vectors.lua
+            echo "tinytuya now produces different frames; review and regenerate the vectors."
+            exit 1
+          fi

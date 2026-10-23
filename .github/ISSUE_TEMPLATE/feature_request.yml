@@ -1,0 +1,28 @@
+name: Feature request
+description: Suggest a local-control improvement or support for another model
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: feature
+    attributes:
+      label: Requested feature
+      description: Describe the SmartThings behaviour or ventilator function you want.
+    validations:
+      required: true
+  - type: textarea
+    id: dps
+    attributes:
+      label: Relevant data points
+      description: DP numbers, codes and value ranges from devices.json (no keys or IDs).
+  - type: dropdown
+    id: cloud
+    attributes:
+      label: Requires a cloud service?
+      options:
+        - "No"
+        - "Not sure"
+        - "Yes"
+    validations:
+      required: true

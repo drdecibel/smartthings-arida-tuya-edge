@@ -1,0 +1,16 @@
+Arida Ventilator (Tuya LAN) SmartThings Edge driver
+
+Copyright (C) 2026 drdecibel
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version.
+
+The full license text is included in LICENSE.
+
+Bundled third-party files keep their own licences:
+- src/lockbox/          lua-lockbox, MIT, (c) 2015 James L.        src/lockbox/LICENSE
+- src/tuya/gcm.lua,     ST-SmartHome smartthings-drivers, MIT      src/tuya/LICENSE-ST-SmartHome
+  src/tuya/crc32.lua and the 3.5 handshake in src/tuya/v35.lua
+- test/support/dkjson.lua  dkjson, MIT, (c) 2010-2014 David Heiko Kolf (tests only)

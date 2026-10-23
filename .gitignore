@@ -1,0 +1,14 @@
+# SmartThings CLI and local development files
+.smartthings/
+.env
+*.log
+
+# Editor and operating-system files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Generated packages
+*.zip
+dist/

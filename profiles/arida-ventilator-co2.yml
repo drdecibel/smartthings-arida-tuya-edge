@@ -1,0 +1,106 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 drdecibel
+name: arida-ventilator-co2.v1
+components:
+  - id: main
+    label: Ventilator
+    capabilities:
+      - id: switch
+        version: 1
+      - id: fanSpeed
+        version: 1
+      - id: mode
+        version: 1
+      - id: carbonDioxideMeasurement
+        version: 1
+      - id: temperatureMeasurement
+        version: 1
+      - id: filterStatus
+        version: 1
+      - id: refresh
+        version: 1
+    categories:
+      - name: Fan
+  - id: sensorControl
+    label: CO₂-styring
+    capabilities:
+      - id: switch
+        version: 1
+    categories:
+      - name: Switch
+  - id: boost
+    label: Boost
+    capabilities:
+      - id: switch
+        version: 1
+    categories:
+      - name: Switch
+preferences:
+  - name: ipAddress
+    title: IP-adresse
+    description: Ventilatorens lokale IP-adresse. Gi den en fast adresse (DHCP-reservasjon) i ruteren.
+    required: true
+    preferenceType: string
+    definition:
+      stringType: text
+      minLength: 7
+      maxLength: 15
+      default: "192.0.2.1"
+  - name: deviceId
+    title: Device ID
+    description: Tuya device ID (fra tinytuya wizard eller Tuya IoT Platform).
+    required: true
+    preferenceType: string
+    definition:
+      stringType: text
+      minLength: 10
+      maxLength: 40
+      default: "enter-device-id"
+  - name: localKey
+    title: Local key
+    description: Tuya local key, nøyaktig 16 tegn. Lim inn i stedet for å skrive.
+    required: true
+    preferenceType: string
+    definition:
+      stringType: password
+      minLength: 16
+      maxLength: 16
+      default: "enter-local-key!"
+  - name: protocolVersion
+    title: Tuya-protokoll
+    description: La stå på Automatisk med mindre tilkoblingen feiler.
+    required: true
+    preferenceType: enumeration
+    definition:
+      options:
+        auto: Automatisk
+        "3.3": "3.3"
+        "3.4": "3.4"
+        "3.5": "3.5"
+      default: auto
+  - name: pollInterval
+    title: Oppdateringsintervall (sekunder)
+    description: Hvor ofte status hentes fra ventilatoren.
+    required: true
+    preferenceType: integer
+    definition:
+      minimum: 10
+      maximum: 3600
+      default: 30
+  - name: sensorThreshold
+    title: Terskel for CO₂-styring (ppm)
+    description: CO₂-nivå (400–2000 ppm) der ventilatoren øker luftmengden. 0 = ikke endre innstillingen i ventilatoren.
+    required: false
+    preferenceType: integer
+    definition:
+      minimum: 0
+      maximum: 2000
+      default: 0
+  - name: dpMap
+    title: DP-oppsett (avansert)
+    description: Overstyr DP-numre, f.eks. "sensor=105,threshold=104". standard = innebygde verdier.
+    required: false
+    preferenceType: string
+    definition:
+      stringType: text
+      default: "standard"

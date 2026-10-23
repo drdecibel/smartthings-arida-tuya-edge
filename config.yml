@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 drdecibel
+name: 'Arida Ventilator (Tuya LAN)'
+# The upload API limits packageKey to 36 characters:
+# ^[a-zA-Z0-9 _/\-()\[\]{}.]{1,36}$
+packageKey: 'io.github.drdecibel.arida.tuya'
+description: 'Local SmartThings Edge control for Arida Base/Venti WiFi room ventilators (Tuya)'
+vendorSupportInformation: 'https://github.com/drdecibel/smartthings-arida-tuya-edge'
+permissions:
+  lan: {}
+  discovery: {}
