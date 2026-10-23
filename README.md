@@ -22,7 +22,8 @@ The Smart Life app keeps working alongside it.
 | Automated checks | 63 tests on Lua 5.3, CI on Lua 5.3/5.4 |
 | Protocol verification | Tuya 3.3, 3.4 and 3.5 frames, handshakes and session keys are byte-identical to [tinytuya](https://github.com/jasonacox/tinytuya) (reference vectors in `test/fixtures`) |
 | Verified on hardware | Two Arida Base WiFi units (`sryya13xip27w2nv`, protocol 3.5): key push, device creation, protocol detection and status (switch, mode, speed, humidity, humidity control, filter) |
-| Not yet verified | Commands from SmartThings (speed, mode, on/off, switches), address search after a DHCP change, protocols 3.3/3.4 on real units, the CO₂ variant |
+| Not yet verified | Commands other than Driftsmodus (speed, on/off, switches, threshold, timer), Routines acting on the units, address search after a DHCP change, protocols 3.3/3.4 on real units, the CO₂ variant |
+| Owner report | Changing Driftsmodus from the app appears to work |
 
 The data points come from the Tuya cloud model of the Arida Venti 160 and from
 reports by owners of the humidity-sensor variant. See [Data points](#data-points). If your unit
