@@ -2,6 +2,9 @@
 
 ## 0.3.0 – 2026-10-23
 
+- Published the channel invitation; browser enrolment is now the primary installation method.
+- Documented recommended Routines: frost protection (exhaust below −20 °C, heat recovery above −17 °C) and night mode.
+
 - No typing: `tools/push-keys.py` sends device IDs and local keys from tinytuya's
   `devices.json` to the hub over the local network. The driver asks with a UDP broadcast
   during Scan nearby and at start-up, stores the keys on the hub and creates one device

@@ -21,7 +21,8 @@ The Smart Life app keeps working alongside it.
 | Driver version | 0.3.0 |
 | Automated checks | 61 tests on Lua 5.3, CI on Lua 5.3/5.4 |
 | Protocol verification | Tuya 3.3, 3.4 and 3.5 frames, handshakes and session keys are byte-identical to [tinytuya](https://github.com/jasonacox/tinytuya) (reference vectors in `test/fixtures`) |
-| Verified on hardware | **Not yet.** First hardware test pending |
+| Verified on hardware | Two Arida Base WiFi units (`sryya13xip27w2nv`, protocol 3.5): key push, device creation, protocol detection and status (switch, mode, speed, humidity, humidity control, filter) |
+| Not yet verified | Commands from SmartThings (speed, mode, on/off, switches), address search after a DHCP change, protocols 3.3/3.4 on real units, the CO₂ variant |
 
 The data points come from the Tuya cloud model of the Arida Venti 160 and from
 reports by owners of the humidity-sensor variant. See [Data points](#data-points). If your unit
@@ -77,7 +78,14 @@ python -m tinytuya scan
 
 ### 2. Install the driver
 
-The driver is not yet published to a channel. Install it with the [SmartThings CLI](https://github.com/SmartThingsCommunity/smartthings-cli):
+**From a browser (recommended):**
+
+1. Open the **[Arida Ventilator Edge invitation](https://bestow-regional.api.smartthings.com/invite/KPMeyNNaA0MQ)**.
+2. Sign in with the Samsung account that owns your hub.
+3. Enrol the hub you want to run the driver on.
+4. Install **Arida Ventilator (Tuya LAN)** from **Available Drivers**.
+
+**With the [SmartThings CLI](https://github.com/SmartThingsCommunity/smartthings-cli) (advanced, your own channel):**
 
 ```sh
 smartthings edge:channels:create
@@ -86,6 +94,9 @@ smartthings edge:drivers:package .
 smartthings edge:channels:assign
 smartthings edge:drivers:install
 ```
+
+> **If you maintain your own channel:** deleting a channel invitation also unenrols every hub
+> that joined through it. Create a new invitation before deleting an old one.
 
 ### 3. Add the ventilators (no typing)
 
@@ -108,6 +119,38 @@ driver picks up the new key.
 
 Without a PC, enter **Device ID** and **Local key** in the device's settings in the phone app
 instead. Settings win over pushed keys.
+
+## Recommended Routines
+
+The ventilators have no outdoor temperature sensor, and an Edge driver cannot read the weather
+or other devices, so these are SmartThings Routines (**Automations → + → Add routine**). The
+weather condition uses the forecast for your home location; an outdoor sensor works too.
+
+### Frost protection
+
+Moist indoor air can freeze to ice in the heat exchanger in severe cold. Arida's manual
+(troubleshooting: frost/rime on the indoor part, ticking sound) says to run the unit in
+**exhaust** mode for 1–2 hours to thaw it. Exhaust recovers no heat and draws replacement air
+from the surrounding rooms, so use it only in deep cold and stay on heat recovery otherwise:
+
+| Routine | If | Then |
+|---|---|---|
+| Frost protection | Weather → Temperature **below −20 °C** | Every ventilator → Mode → **Avtrekk** |
+| Back to heat recovery | Weather → Temperature **above −17 °C** | Every ventilator → Mode → **Varmegjenvinning** |
+
+The 3 °C gap stops the units from switching back and forth around the limit. Arida states no
+specific limit: −20 °C is a safety margin chosen by the project (the units are rated for
+−20/−30 °C ambient), not a manufacturer value.
+
+### Night mode
+
+| Routine | If | Then |
+|---|---|---|
+| Night | Time **23:00** | Every ventilator → Fan speed → **1** |
+| Morning | Time **07:00** | Every ventilator → Fan speed → **2** |
+
+The unit's own humidity control (**Fuktstyring**) can still raise the speed at night, for
+example after a shower. For a silent night, also switch Fuktstyring off at 23:00 and on at 07:00.
 
 ## Addresses and DHCP
 
