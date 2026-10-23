@@ -36,7 +36,7 @@ numbers them differently, the **DP map** setting overrides them without a new dr
 | Mode | 2 | Varmegjenvinning (`ventilate`), Tilluft (`supply`), Avtrekk (`exhaust`) |
 | Relative humidity | 105 | Humidity variant (Base WiFi) |
 | Carbon dioxide | 105 | CO₂ variant (Venti CO₂). The profile switches automatically |
-| Temperature | 21 | Only if the unit reports it |
+| Temperature | 21 | CO₂ variant only. The Base WiFi has no temperature sensor |
 | Filter status | 106 | `replace` when the filter needs cleaning |
 | Component **Fuktstyring** / **CO₂-styring** | 103 | Sensor-controlled ventilation on/off |
 | Component **Boost** | 107 | Maximum speed for 30 minutes |

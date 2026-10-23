@@ -6,6 +6,9 @@
   `devices.json` to the hub over the local network. The driver asks with a UDP broadcast
   during Scan nearby and at start-up, stores the keys on the hub and creates one device
   per ventilator. Device settings still work and take precedence.
+- The humidity profile no longer shows a temperature: the Base WiFi has no temperature
+  sensor and never reports DP 21.
+- Verified on two Base WiFi units (protocol 3.5): key push, device creation and status.
 
 ## 0.2.0 – 2026-10-23
 
