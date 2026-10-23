@@ -12,6 +12,7 @@ local arida = require("arida")
 local constants = require("constants")
 local discovery = require("discovery")
 local Client = require("tuya.client")
+local locator = require("locator")
 
 math.randomseed(os.time())
 
@@ -38,26 +39,124 @@ local function dp_map(device)
   return map
 end
 
-local function client_for(device)
-  local r = rt(device)
-  if r.client then return r.client end
+-- Assigned once the driver is built; relocation needs the other devices.
+local driver
+
+local function override_ip(device)
+  local ip = (device.preferences or {}).ipAddress
+  if ip == constants.AUTO_IP or ip == constants.LEGACY_PLACEHOLDER_IP then return nil end
+  return locator.prefix(ip) and ip or nil
+end
+
+--- The address to talk to: the user's override, else the last one found.
+local function current_host(device)
+  return override_ip(device) or device:get_field(constants.FIELD.HOST)
+end
+
+--- What identifies the unit: device ID and local key. Returns spec or nil, err.
+local function spec_for(device)
   local p = device.preferences or {}
-  if not discovery.is_configured(device) or p.localKey == constants.PLACEHOLDER_KEY then
-    return nil, "not configured: enter IP address, device ID and local key in the device settings"
+  if not discovery.is_configured(device) then
+    return nil, "not configured: enter device ID and local key in the device settings"
   end
   if #(p.localKey or "") ~= 16 then
     return nil, "the local key must be exactly 16 characters"
   end
-  r.client = Client.new({
-    ip = p.ipAddress,
+  return {
     device_id = p.deviceId,
     local_key = p.localKey,
     version = constants.PROTOCOL_OPTION[p.protocolVersion] or "auto",
-    timeout = constants.TIMEOUT_SECONDS,
     learned = device:get_field(constants.FIELD.PROTOCOL),
+  }
+end
+
+local function client_for(device)
+  local r = rt(device)
+  if r.client then return r.client end
+  local spec, err = spec_for(device)
+  if not spec then return nil, err end
+  local host = current_host(device)
+  if not host then return nil, "address not known yet" end
+  r.client = Client.new({
+    ip = host,
+    device_id = spec.device_id,
+    local_key = spec.local_key,
+    version = spec.version,
+    timeout = constants.TIMEOUT_SECONDS,
+    learned = spec.learned,
     log = log,
   })
   return r.client
+end
+
+--- The hub's /24. Read from the driver environment, or else from the local
+--- address the OS picks for a UDP "connection", which sends no packet.
+local function hub_prefix()
+  local info = driver and driver.environment_info
+  local prefix = locator.prefix(info and info.hub_ipv4)
+  if prefix then return prefix end
+  local ok, ip = pcall(function()
+    local udp = require("cosock.socket").udp()
+    udp:setpeername(constants.LEGACY_PLACEHOLDER_IP, 9)
+    local addr = udp:getsockname()
+    udp:close()
+    return addr
+  end)
+  return ok and locator.prefix(ip) or nil
+end
+
+--- Looks for the unit on the local network, as the Daikin driver does after a
+--- DHCP change. Rate limited, because a unit that is switched off at the wall
+--- would otherwise trigger a scan on every poll. Returns dps, version or nil.
+local function relocate(device, reason)
+  local r = rt(device)
+  local now = os.time()
+  if r.last_scan and now - r.last_scan < constants.RELOCATE_INTERVAL then return nil end
+  r.last_scan = now
+
+  local spec = spec_for(device)
+  if not spec then return nil end
+
+  -- Search the hub's /24, plus the /24 of any address a ventilator has had.
+  local prefixes, seen = {}, {}
+  local function add(prefix)
+    if prefix and not seen[prefix] then
+      seen[prefix] = true
+      prefixes[#prefixes + 1] = prefix
+    end
+  end
+  add(hub_prefix())
+  for _, d in ipairs(driver:get_devices()) do
+    add(locator.prefix(d:get_field(constants.FIELD.HOST)))
+  end
+  if #prefixes == 0 then
+    log.warn(device.label .. ": cannot search for the ventilator: hub address unknown; set its IP address in the settings")
+    return nil
+  end
+
+  -- Addresses that belong to the other ventilators are not tried.
+  local skip = {}
+  for _, other in ipairs(driver:get_devices()) do
+    if other.id ~= device.id then
+      local host = other:get_field(constants.FIELD.HOST)
+      if host then skip[host] = true end
+    end
+  end
+
+  log.info(device.label .. ": searching the local network for the ventilator (" .. reason .. ")")
+  local ip, dps, version = locator.locate(prefixes, spec, skip, {log = log})
+  if not ip then
+    log.warn(device.label .. ": ventilator not found on the local network; retrying in "
+      .. constants.RELOCATE_INTERVAL .. " s")
+    return nil
+  end
+  if ip ~= device:get_field(constants.FIELD.HOST) then
+    log.info(device.label .. ": ventilator found at a new local address")
+    device:set_field(constants.FIELD.HOST, ip, {persist = true})
+  end
+  r.client = nil
+  r.last_scan = nil
+  return dps, version
 end
 
 local function emit_supported_modes(device)
@@ -109,38 +208,64 @@ local function emit_state(device, dps)
   end
 end
 
---- Writes `set_dps` (or nothing) and reports the resulting state. All calls
---- for one device run on its own thread, so they never overlap.
-local function exchange(device, set_dps)
-  local client, err = client_for(device)
-  if not client then
-    log.warn(device.label .. ": " .. err)
-    device:offline()
-    return false
-  end
-
+local function on_failure(device, err)
   local r = rt(device)
-  local dps, version_or_err = client:exchange(set_dps)
-  if not dps then
-    r.failures = r.failures + 1
-    log.warn(string.format("%s: exchange failed (%d in a row): %s", device.label, r.failures, tostring(version_or_err)))
-    if r.failures >= constants.OFFLINE_AFTER then
-      device:offline()
-    end
-    return false
+  r.failures = r.failures + 1
+  log.warn(string.format("%s: exchange failed (%d in a row): %s", device.label, r.failures, tostring(err)))
+  if r.failures >= constants.OFFLINE_AFTER then
+    device:offline()
   end
+  return false
+end
 
+local function on_success(device, dps, version)
+  local r = rt(device)
   if r.failures > 0 or not r.online then
-    log.info(device.label .. ": connected with Tuya protocol " .. version_or_err)
+    log.info(device.label .. ": connected with Tuya protocol " .. version)
   end
   r.failures = 0
   r.online = true
-  if device:get_field(constants.FIELD.PROTOCOL) ~= version_or_err then
-    device:set_field(constants.FIELD.PROTOCOL, version_or_err, {persist = true})
+  if device:get_field(constants.FIELD.PROTOCOL) ~= version then
+    device:set_field(constants.FIELD.PROTOCOL, version, {persist = true})
   end
   device:online()
   emit_state(device, dps)
   return true
+end
+
+--- Writes `set_dps` (or nothing) and reports the resulting state. All calls
+--- for one device run on its own thread, so they never overlap.
+---
+--- Without a user-set IP address the unit is found by searching the network,
+--- both the first time and whenever the last known address stops answering.
+local function exchange(device, set_dps)
+  local spec, spec_err = spec_for(device)
+  if not spec then
+    log.warn(device.label .. ": " .. spec_err)
+    device:offline()
+    return false
+  end
+
+  local client = client_for(device)
+  local dps, version_or_err
+  if client then
+    dps, version_or_err = client:exchange(set_dps)
+    if dps then return on_success(device, dps, version_or_err) end
+    if override_ip(device) then return on_failure(device, version_or_err) end
+  end
+
+  local found_dps, found_version = relocate(device, client and "no answer at the last known address" or "first connection")
+  if not found_dps then
+    return on_failure(device, version_or_err or "address not known yet")
+  end
+  if set_dps then
+    -- The search only read the status; apply the write at the new address.
+    client = client_for(device)
+    dps, version_or_err = client:exchange(set_dps)
+    if not dps then return on_failure(device, version_or_err) end
+    return on_success(device, dps, version_or_err)
+  end
+  return on_success(device, found_dps, found_version)
 end
 
 local function stop_polling(device)
@@ -171,7 +296,7 @@ end
 local function device_added(_driver, device)
   emit_supported_modes(device)
   if not discovery.is_configured(device) then
-    log.info(device.label .. ": added; open its settings and enter IP address, device ID and local key")
+    log.info(device.label .. ": added; open its settings and enter device ID and local key")
   end
 end
 
@@ -241,7 +366,7 @@ local function refresh(_driver, device)
   exchange(device)
 end
 
-local driver = Driver("arida-tuya-lan", {
+driver = Driver("arida-tuya-lan", {
   discovery = discovery.handle,
   lifecycle_handlers = {
     init = device_init,

@@ -4,7 +4,8 @@
 -- Tuya devices announce themselves with encrypted UDP broadcasts on ports
 -- 6666/6667, but an Edge driver can only bind UDP port 0, so it cannot hear
 -- them. Discovery therefore creates a blank device that the user fills in
--- from its settings (IP address, device ID, local key).
+-- from its settings (device ID and local key). The driver then finds the
+-- unit's address itself (see locator.lua), so units can stay on DHCP.
 --
 -- "Scan nearby" creates one new device only when every existing device has
 -- been configured, so repeated background scans never pile up blank tiles,
@@ -17,8 +18,8 @@ local M = {}
 
 function M.is_configured(device)
   local p = device.preferences or {}
-  return p.ipAddress ~= nil and p.ipAddress ~= constants.PLACEHOLDER_IP
-    and p.deviceId ~= nil and p.deviceId ~= constants.PLACEHOLDER_ID
+  return p.deviceId ~= nil and p.deviceId ~= constants.PLACEHOLDER_ID
+    and p.localKey ~= nil and p.localKey ~= constants.PLACEHOLDER_KEY
 end
 
 function M.handle(driver, _opts, _cons)
@@ -40,7 +41,7 @@ function M.handle(driver, _opts, _cons)
     model = "Base/Venti WiFi",
     vendor_provided_label = "Arida ventilator",
   }
-  log.info("Discovery: creating '" .. metadata.label .. "'. Enter IP address, device ID and local key in its settings.")
+  log.info("Discovery: creating '" .. metadata.label .. "'. Enter device ID and local key in its settings.")
   driver:try_create_device(metadata)
 end
 

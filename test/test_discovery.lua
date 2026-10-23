@@ -13,8 +13,8 @@ local function fake_driver(devices)
   return d
 end
 
-local function device(ip, id)
-  return {label = "x", preferences = {ipAddress = ip, deviceId = id}}
+local function device(ip, id, key)
+  return {label = "x", preferences = {ipAddress = ip, deviceId = id, localKey = key or "0123456789abcdef"}}
 end
 
 H.test("first scan creates one device with the humidity profile", function()
@@ -27,7 +27,7 @@ H.test("first scan creates one device with the humidity profile", function()
 end)
 
 H.test("no new device while one is still unconfigured", function()
-  local driver = fake_driver({device(constants.PLACEHOLDER_IP, constants.PLACEHOLDER_ID)})
+  local driver = fake_driver({device(constants.AUTO_IP, constants.PLACEHOLDER_ID)})
   discovery.handle(driver)
   H.eq(#driver.created, 0)
 end)
@@ -39,8 +39,9 @@ H.test("next scan creates the next device once all are configured", function()
   H.eq(driver.created[1].label, "Arida ventilator 3")
 end)
 
-H.test("a device with only the IP filled in is not configured", function()
-  H.eq(discovery.is_configured(device("192.0.2.10", constants.PLACEHOLDER_ID)), false)
+H.test("a device with only the device ID filled in is not configured", function()
+  H.eq(discovery.is_configured(device("auto", "abc", constants.PLACEHOLDER_KEY)), false)
+  H.eq(discovery.is_configured(device("auto", "abc", "0123456789abcdef")), true, "no IP needed")
 end)
 
 H.done("test_discovery")

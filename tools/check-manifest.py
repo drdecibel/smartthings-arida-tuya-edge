@@ -74,7 +74,7 @@ for name in referenced:
 
 # Placeholder defaults in the profiles must match what the driver treats as
 # "not configured".
-for pref, constant in (("ipAddress", "PLACEHOLDER_IP"), ("deviceId", "PLACEHOLDER_ID"),
+for pref, constant in (("ipAddress", "AUTO_IP"), ("deviceId", "PLACEHOLDER_ID"),
                        ("localKey", "PLACEHOLDER_KEY"), ("dpMap", "DEFAULT_DP_MAP")):
     value = re.search(rf'C\.{constant}\s*=\s*"([^"]*)"', constants)
     for name, profile in profiles.items():

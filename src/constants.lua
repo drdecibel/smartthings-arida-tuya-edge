@@ -8,9 +8,11 @@ C.PROFILE = {
   co2 = "arida-ventilator-co2.v1",
 }
 
--- Preference defaults that mean "not configured yet". The IP is from the
--- RFC 5737 documentation range, so it can never be a real device.
-C.PLACEHOLDER_IP = "192.0.2.1"
+-- Preference defaults that mean "not configured yet".
+-- ipAddress "auto" means "find the unit on the network". The first release
+-- used an RFC 5737 documentation address as its placeholder; it means the same.
+C.AUTO_IP = "auto"
+C.LEGACY_PLACEHOLDER_IP = "192.0.2.1"
 C.PLACEHOLDER_ID = "enter-device-id"
 C.PLACEHOLDER_KEY = "enter-local-key!"
 C.DEFAULT_DP_MAP = "standard"
@@ -23,10 +25,13 @@ C.MIN_POLL_SECONDS = 10
 C.TIMEOUT_SECONDS = 5
 -- Consecutive failed polls before the device is shown as offline.
 C.OFFLINE_AFTER = 3
+-- Minimum seconds between network searches for one unit.
+C.RELOCATE_INTERVAL = 180
 
 C.FIELD = {
   PROTOCOL = "tuya_protocol",
   SENSOR_KIND = "sensor_kind",
+  HOST = "host",
 }
 
 return C

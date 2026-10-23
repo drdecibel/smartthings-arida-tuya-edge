@@ -37,15 +37,15 @@ components:
       - name: Switch
 preferences:
   - name: ipAddress
-    title: IP-adresse
-    description: Ventilatorens lokale IP-adresse. Gi den en fast adresse (DHCP-reservasjon) i ruteren.
-    required: true
+    title: IP-adresse (valgfritt)
+    description: La stå på auto, så finner driveren ventilatoren selv, også når ruteren gir den ny adresse. Skriv en IP bare for å låse den.
+    required: false
     preferenceType: string
     definition:
       stringType: text
-      minLength: 7
+      minLength: 4
       maxLength: 15
-      default: "192.0.2.1"
+      default: "auto"
   - name: deviceId
     title: Device ID
     description: Tuya device ID (fra tinytuya wizard eller Tuya IoT Platform).

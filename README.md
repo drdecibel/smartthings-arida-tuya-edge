@@ -18,8 +18,8 @@ The Smart Life app keeps working alongside it.
 
 | | |
 |---|---|
-| Driver version | 0.1.0 |
-| Automated checks | 48 tests on Lua 5.3, CI on Lua 5.3/5.4 |
+| Driver version | 0.2.0 |
+| Automated checks | 55 tests on Lua 5.3, CI on Lua 5.3/5.4 |
 | Protocol verification | Tuya 3.3, 3.4 and 3.5 frames, handshakes and session keys are byte-identical to [tinytuya](https://github.com/jasonacox/tinytuya) (reference vectors in `test/fixtures`) |
 | Verified on hardware | **Not yet.** First hardware test pending |
 
@@ -63,7 +63,8 @@ developer cloud. After that the driver never contacts the cloud.
 
    Enter the project's Access ID/Secret when asked. The wizard writes `devices.json` with
    each unit's `id`, `key`, `ip`, `version` and its DP `mapping`.
-3. Give each ventilator a fixed IP (DHCP reservation) in your router.
+No fixed IP or DHCP reservation is needed: the driver finds each unit itself (see
+[Addresses and DHCP](#addresses-and-dhcp)).
 
 > The local key changes if a unit is removed and re-added in Smart Life. Run the wizard
 > again in that case.
@@ -89,16 +90,34 @@ smartthings edge:drivers:install
 ### 3. Add the ventilators
 
 1. In the SmartThings app, choose **Add device → Scan nearby**. An *Arida ventilator* appears.
-2. Open its **Settings** and enter IP address, device ID and local key. Paste the key; don't type it.
+2. Open its **Settings** and enter the device ID and local key. Paste the key; don't type it.
+   Leave **IP-adresse** on `auto`.
 3. Within a few seconds the tile shows status. Leave **Tuya-protokoll** on *Automatisk*. The
    driver finds 3.3, 3.4 or 3.5 itself and remembers it.
 4. For the next unit, run **Scan nearby** again. A new device is created only when all existing
    ones are configured.
 
+## Addresses and DHCP
+
+As with the Daikin driver, a unit's identity is not its IP address. Here it is the Tuya device ID and
+local key, so the units can stay on ordinary DHCP:
+
+1. When a unit has no known address, or stops answering at it, the driver connects to TCP 6668
+   on every address in the hub's /24, 32 at a time (a few seconds).
+2. It asks each open host for its status using this unit's local key. Every unit has its own key,
+   so only the right ventilator can answer; other Tuya devices stay silent and are skipped.
+3. The address is remembered and used until it stops answering. A unit that cannot be found is
+   searched for again at most every 3 minutes.
+
+Typing an address into **IP-adresse** pins the unit to it and turns the search off. The search
+covers the hub's own /24 only; put the units on the same subnet as the hub.
+
 ## Data points
 
 From the Tuya cloud model of product `npf4762xatmaw29g` (Arida Venti 160 / Small Ventilator 2.0),
-see [tuya-local #2829](https://github.com/make-all/tuya-local/issues/2829):
+see [tuya-local #2829](https://github.com/make-all/tuya-local/issues/2829). The Base WiFi
+(`sryya13xip27w2nv`, "Small Ventilator 1.2", protocol 3.5) reports the same numbers locally:
+1, 2, 3, 15, 22, 23, 101–106, with 103–105 for humidity. Its cloud model lists only some of them.
 
 | DP | Code | Type | Used |
 |---|---|---|---|
@@ -129,7 +148,8 @@ debug level (`smartthings edge:drivers:logcat`). If your `devices.json` mapping 
 
 | Symptom | Cause |
 |---|---|
-| Offline, log says `connect failed` | Wrong IP, unit off Wi-Fi, or the hub and unit are on separate networks/VLANs |
+| `ventilator not found on the local network` | Unit off Wi-Fi or powered off, wrong local key/device ID, or the unit is on another subnet/VLAN than the hub |
+| Offline, log says `connect failed` | A pinned **IP-adresse** is wrong. Set it back to `auto` |
 | `no protocol version answered` | Wrong local key or device ID (most common), or the unit was re-paired |
 | `HMAC did not verify` | Wrong local key |
 | Works, then stops after re-pairing in Smart Life | New local key: run the wizard again |
@@ -155,6 +175,7 @@ Layout:
 - `src/arida.lua` – DP ↔ SmartThings translation (pure, tested)
 - `src/init.lua` – driver: lifecycle, polling, commands
 - `src/discovery.lua` – "Scan nearby" creates one blank device at a time
+- `src/locator.lua` – finds a unit's current address by its key (DHCP support)
 
 ## Acknowledgements
 

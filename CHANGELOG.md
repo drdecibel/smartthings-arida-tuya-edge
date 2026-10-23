@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.0 – 2026-10-23
+
+- Units can stay on DHCP. A unit is identified by its device ID and local key; the driver
+  finds its address by scanning the hub's /24 for TCP 6668 and asking each host with the
+  unit's key, and searches again when the address stops answering. **IP-adresse** is now
+  optional (`auto`) and pins the unit when set.
+- Protocol preference keys are `v33`/`v34`/`v35`; the SmartThings API rejects `3.3`.
+- Documented the Base WiFi's data points as read from real units.
+
 ## 0.1.0 – 2026-10-23
 
 First release, not yet verified on hardware.
