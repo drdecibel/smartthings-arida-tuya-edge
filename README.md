@@ -18,8 +18,8 @@ The Smart Life app keeps working alongside it.
 
 | | |
 |---|---|
-| Driver version | 0.2.0 |
-| Automated checks | 55 tests on Lua 5.3, CI on Lua 5.3/5.4 |
+| Driver version | 0.3.0 |
+| Automated checks | 61 tests on Lua 5.3, CI on Lua 5.3/5.4 |
 | Protocol verification | Tuya 3.3, 3.4 and 3.5 frames, handshakes and session keys are byte-identical to [tinytuya](https://github.com/jasonacox/tinytuya) (reference vectors in `test/fixtures`) |
 | Verified on hardware | **Not yet.** First hardware test pending |
 
@@ -87,15 +87,27 @@ smartthings edge:channels:assign
 smartthings edge:drivers:install
 ```
 
-### 3. Add the ventilators
+### 3. Add the ventilators (no typing)
 
-1. In the SmartThings app, choose **Add device → Scan nearby**. An *Arida ventilator* appears.
-2. Open its **Settings** and enter the device ID and local key. Paste the key; don't type it.
-   Leave **IP-adresse** on `auto`.
-3. Within a few seconds the tile shows status. Leave **Tuya-protokoll** on *Automatisk*. The
-   driver finds 3.3, 3.4 or 3.5 itself and remembers it.
-4. For the next unit, run **Scan nearby** again. A new device is created only when all existing
-   ones are configured.
+From the repository folder on the PC that has `devices.json`:
+
+```sh
+python tools/push-keys.py
+```
+
+Leave it running and choose **Add device → Scan nearby** in the SmartThings app. The hub asks on
+the local network, the script answers with each ventilator's device ID and local key, and one
+device per ventilator appears, named as in Smart Life. The driver also asks once whenever it
+starts, so installing or updating the driver while the script runs works too. If Windows Firewall
+asks, allow Python on private networks.
+
+The keys are stored on the hub only. The script never prints them, sends only ventilators (use
+`--all` for other Tuya devices), and answers only the hub the SmartThings CLI knows (`--hub IP`
+to choose). After re-pairing a unit in Smart Life, run the wizard and the script again; the
+driver picks up the new key.
+
+Without a PC, enter **Device ID** and **Local key** in the device's settings in the phone app
+instead. Settings win over pushed keys.
 
 ## Addresses and DHCP
 
@@ -176,6 +188,7 @@ Layout:
 - `src/init.lua` – driver: lifecycle, polling, commands
 - `src/discovery.lua` – "Scan nearby" creates one blank device at a time
 - `src/locator.lua` – finds a unit's current address by its key (DHCP support)
+- `src/provision.lua`, `tools/push-keys.py` – keys from `devices.json` to the hub, no typing
 
 ## Acknowledgements
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0 – 2026-10-23
+
+- No typing: `tools/push-keys.py` sends device IDs and local keys from tinytuya's
+  `devices.json` to the hub over the local network. The driver asks with a UDP broadcast
+  during Scan nearby and at start-up, stores the keys on the hub and creates one device
+  per ventilator. Device settings still work and take precedence.
+
 ## 0.2.0 – 2026-10-23
 
 - Units can stay on DHCP. A unit is identified by its device ID and local key; the driver

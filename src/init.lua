@@ -13,6 +13,7 @@ local constants = require("constants")
 local discovery = require("discovery")
 local Client = require("tuya.client")
 local locator = require("locator")
+local provision = require("provision")
 
 math.randomseed(os.time())
 
@@ -53,21 +54,30 @@ local function current_host(device)
   return override_ip(device) or device:get_field(constants.FIELD.HOST)
 end
 
---- What identifies the unit: device ID and local key. Returns spec or nil, err.
+--- What identifies the unit: device ID and local key, from the device
+--- settings if filled in, else as pushed from a PC (provision.lua).
+--- Returns spec or nil, err.
 local function spec_for(device)
   local p = device.preferences or {}
-  if not discovery.is_configured(device) then
-    return nil, "not configured: enter device ID and local key in the device settings"
+  local spec
+  if p.deviceId and p.deviceId ~= constants.PLACEHOLDER_ID
+      and p.localKey and p.localKey ~= constants.PLACEHOLDER_KEY then
+    spec = {device_id = p.deviceId, local_key = p.localKey}
+  else
+    local id = provision.tuya_id(device.device_network_id)
+    local unit = id and provision.lookup(driver, id)
+    if not unit then
+      return nil, "not configured: run tools/push-keys.py on a PC and tap Scan nearby, "
+        .. "or enter device ID and local key in the device settings"
+    end
+    spec = {device_id = id, local_key = unit.key, hint_ip = unit.ip, hint_version = unit.version}
   end
-  if #(p.localKey or "") ~= 16 then
+  if #spec.local_key ~= 16 then
     return nil, "the local key must be exactly 16 characters"
   end
-  return {
-    device_id = p.deviceId,
-    local_key = p.localKey,
-    version = constants.PROTOCOL_OPTION[p.protocolVersion] or "auto",
-    learned = device:get_field(constants.FIELD.PROTOCOL),
-  }
+  spec.version = constants.PROTOCOL_OPTION[p.protocolVersion] or "auto"
+  spec.learned = device:get_field(constants.FIELD.PROTOCOL) or spec.hint_version
+  return spec
 end
 
 local function client_for(device)
@@ -75,7 +85,7 @@ local function client_for(device)
   if r.client then return r.client end
   local spec, err = spec_for(device)
   if not spec then return nil, err end
-  local host = current_host(device)
+  local host = current_host(device) or spec.hint_ip
   if not host then return nil, "address not known yet" end
   r.client = Client.new({
     ip = host,
@@ -250,7 +260,13 @@ local function exchange(device, set_dps)
   local dps, version_or_err
   if client then
     dps, version_or_err = client:exchange(set_dps)
-    if dps then return on_success(device, dps, version_or_err) end
+    if dps then
+      -- Remember a first-guess address once it has answered with our key.
+      if not override_ip(device) and device:get_field(constants.FIELD.HOST) ~= client.ip then
+        device:set_field(constants.FIELD.HOST, client.ip, {persist = true})
+      end
+      return on_success(device, dps, version_or_err)
+    end
     if override_ip(device) then return on_failure(device, version_or_err) end
   end
 
@@ -295,9 +311,17 @@ end
 
 local function device_added(_driver, device)
   emit_supported_modes(device)
-  if not discovery.is_configured(device) then
-    log.info(device.label .. ": added; open its settings and enter device ID and local key")
+  if not discovery.is_configured(device, driver) then
+    log.info(device.label .. ": added; run tools/push-keys.py on a PC and tap Scan nearby, "
+      .. "or enter device ID and local key in its settings")
   end
+end
+
+--- Called when a PC pushes a new key for an existing device.
+local function keys_changed(device)
+  rt(device).client = nil
+  rt(device).last_scan = nil
+  device.thread:call_with_delay(0, function() exchange(device) end)
 end
 
 local CONNECTION_PREFS = {"ipAddress", "deviceId", "localKey", "protocolVersion"}
@@ -400,5 +424,13 @@ driver = Driver("arida-tuya-lan", {
     capabilities.refresh,
   },
 })
+
+driver.on_keys_changed = keys_changed
+
+-- Ask for keys once after start-up, so units appear right after installing
+-- the driver while tools/push-keys.py is running, without a scan.
+driver:call_with_delay(3, function()
+  discovery.provision(driver, keys_changed)
+end, "key setup")
 
 driver:run()

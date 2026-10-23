@@ -6,8 +6,13 @@ local H = require("support.harness")
 local constants = require("constants")
 local discovery = require("discovery")
 
+local provision = require("provision")
+
+-- No PC answers the key setup request in these tests.
+provision.request = function() return {}, 0 end
+
 local function fake_driver(devices)
-  local d = {created = {}}
+  local d = {created = {}, datastore = {}}
   function d:get_devices() return devices end
   function d:try_create_device(metadata) self.created[#self.created + 1] = metadata end
   return d

@@ -19,6 +19,7 @@ test:
 	$(LUA) test/test_model.lua
 	$(LUA) test/test_discovery.lua
 	$(LUA) test/test_locator.lua
+	$(LUA) test/test_provision.lua
 
 manifest:
 	$(PYTHON) tools/check-manifest.py
