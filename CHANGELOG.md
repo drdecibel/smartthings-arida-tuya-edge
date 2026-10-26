@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Verified on hardware: a third Base WiFi unit added later with `tools/push-keys.py` and
+  Scan nearby, and a unit found again by the driver after its DHCP address changed.
+
 ## 0.5.0 – 2026-10-23
 
 - **Fuktterskel:** the humidity threshold (DP 104) is shown as a 50–95 % slider and can be
