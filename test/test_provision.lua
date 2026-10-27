@@ -120,6 +120,18 @@ H.test("a second push creates nothing and reports only changed keys", function()
   H.eq(changed[1], "arida-tuya-id-bfc0000000000000000001")
 end)
 
+H.test("once keys were pushed, a scan without the PC adds no blank tile", function()
+  local driver = fake_driver()
+  discovery.provision(driver, nil, {udp = udp_with({reply({{id = "bfc0000000000000000001", key = KEY_A}})}, {}), seconds = 1})
+  H.eq(#driver.created, 1)
+  -- Later "Scan nearby" for some other device; the script is not running.
+  local real_request = provision.request
+  provision.request = function() return {}, 0 end
+  discovery.handle(driver)
+  provision.request = real_request
+  H.eq(#driver.created, 1, "no blank device")
+end)
+
 H.test("no PC answering creates nothing from provisioning", function()
   local driver = fake_driver()
   H.eq(discovery.provision(driver, nil, {udp = udp_with({}, {}), seconds = 1}), 0)

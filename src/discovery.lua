@@ -8,7 +8,9 @@
 --
 -- Without the script, discovery falls back to creating one blank device to
 -- be filled in from its settings, and only when every existing device is
--- configured, so repeated background scans never pile up blank tiles.
+-- configured, so repeated background scans never pile up blank tiles. Once
+-- keys have been pushed from a PC, that flow is in use and no blank device is
+-- ever created: a scan for some other device must not add an empty tile.
 
 local log = require("log")
 local constants = require("constants")
@@ -94,6 +96,10 @@ end
 
 function M.handle(driver, _opts, _cons)
   if M.provision(driver, driver.on_keys_changed) > 0 then return end
+  if provision.any(driver) then
+    log.info("Discovery: no PC answered with keys; run tools/push-keys.py to add a ventilator")
+    return
+  end
   create_blank(driver)
 end
 

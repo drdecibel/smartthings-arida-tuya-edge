@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Fixed: Scan nearby without the key script running created an empty "Arida ventilator N"
+  tile even when the ventilators had been added with pushed keys. Blank tiles are now only
+  created for the manual flow, before any keys have been pushed.
 - Verified on hardware: a third Base WiFi unit added later with `tools/push-keys.py` and
   Scan nearby, and a unit found again by the driver after its DHCP address changed.
 

@@ -122,7 +122,9 @@ to choose). After re-pairing a unit in Smart Life, run the wizard and the script
 driver picks up the new key.
 
 Without a PC, enter **Device ID** and **Local key** in the device's settings in the phone app
-instead. Settings win over pushed keys.
+instead. Settings win over pushed keys. That manual flow is what the blank "Arida ventilator"
+tile from Scan nearby is for; once keys have been pushed from a PC, Scan nearby never creates
+one, so scanning for other devices leaves no empty tiles behind.
 
 ## Recommended Routines
 

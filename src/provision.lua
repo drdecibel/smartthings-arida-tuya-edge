@@ -118,6 +118,11 @@ function M.lookup(driver, tuya_id)
   return store(driver).units[tuya_id]
 end
 
+--- True once any unit has been provisioned from a PC.
+function M.any(driver)
+  return next(store(driver).units) ~= nil
+end
+
 --- Saves units. Returns the ids that were new or whose key changed.
 function M.save(driver, units)
   local ds = store(driver)
